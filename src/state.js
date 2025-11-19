@@ -1,11 +1,11 @@
 // --- state.js ---
-// Gerencia o estado da conversa para cada usuário
+// Gerencia o estado da conversa para cada usuario
 
-// Armazena o estado atual da interação com cada usuário
+// Armazena o estado atual da interacao com cada usuario
 // Formato: { chatId: { waitingFor: 'field' | 'advice_confirmation' | 'notes_confirmation', tempData: {...}, lastResearchTopic?: string } }
 const conversationState = {};
 
-// Armazena o timestamp da última mensagem recebida de cada usuário (para detectar novas conversas)
+// Armazena o timestamp da ultima mensagem recebida de cada usuario (para detectar novas conversas)
 const lastMessageTimestamps = {};
 
 function getState(chatId) {
@@ -24,7 +24,7 @@ function setState(chatId, newState) {
 
 function updateState(chatId, updates) {
     if (!conversationState[chatId]) {
-        conversationState[chatId] = {}; // Cria se não existir
+        conversationState[chatId] = {}; // Cria se nao existir
     }
     // Mescla as atualizacoes no estado existente
     conversationState[chatId] = { ...conversationState[chatId], ...updates };

@@ -8,7 +8,7 @@ function formatReport(expenses, period = 'month') {
         case 'today': periodText = 'Hoje'; break;
         case 'yesterday': periodText = 'Ontem'; break;
         case 'all': periodText = 'Geral'; break;
-        // Adicione outros períodos se necessário (ex: 'last_month')
+        // Adicione outros periodos se necessário (ex: 'last_month')
         // case 'last_month': periodText = 'Mês Passado'; break;
         default: periodText = `Período (${period})`; // Fallback
     }
@@ -23,7 +23,7 @@ function formatReport(expenses, period = 'month') {
     expenses.forEach(exp => {
         let formattedDate = 'Data Inválida';
         try {
-            // Assume que exp.expense_date está no formato 'YYYY-MM-DD'
+            // Assume que exp.expense_date esta no formato 'YYYY-MM-DD'
             const dateParts = exp.expense_date.split('-');
             if (dateParts.length === 3) {
                 formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY
@@ -78,7 +78,7 @@ function formatExpenseSummary(expenseData, includeNotes = false) {
                  const formattedDate = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                  summary += `\n*- Data:* ${formattedDate}`;
              }
-         } catch (e) { /* Ignora erro de data inválida no resumo */ }
+         } catch (e) {  }
     } else if (expenseData.date === 'today') {
          summary += `\n*- Data:* Hoje`;
     }

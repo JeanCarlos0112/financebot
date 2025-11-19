@@ -3,19 +3,19 @@
 
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const { handleIncomingMessage } = require('./messageHandler'); // Importa o handler principal
-const { closeDbConnection } = require('./db'); // Para fechar DB no disconnect
+const { handleIncomingMessage } = require('./messageHandler');
+const { closeDbConnection } = require('./db');
 const path = require('path');
 const fs = require('fs');
 const { EXPENSE_IMAGES_DIR } = require('../config');
 
-let client; // Instância do cliente WA
+let client;
 
 function initWhatsApp(onReadyCallback) {
     console.log("Inicializando cliente WhatsApp...");
 
     client = new Client({
-        authStrategy: new LocalAuth({ dataPath: "./.wwebjs_auth" }), // Salva sessao localmente
+        authStrategy: new LocalAuth({ dataPath: "./.wwebjs_auth" }),
         puppeteer: {
             headless: true,
             args: [ // Args recomendados para rodar em servidores (especialmente Linux)
@@ -55,7 +55,7 @@ function initWhatsApp(onReadyCallback) {
         console.error('!!! FALHA NA AUTENTICAÇÃO DO WHATSAPP !!!', msg);
         console.error('Isso pode ocorrer se o QR code expirou ou houve um problema na sessão.');
         console.error('Delete a pasta .wwebjs_auth e tente novamente.');
-        process.exit(1); // Encerra o processo em caso de falha de autenticação
+        process.exit(1);
     });
 
     client.on('ready', () => {
@@ -79,13 +79,11 @@ function initWhatsApp(onReadyCallback) {
                     const dir = EXPENSE_IMAGES_DIR || './expense_images'; // Garante um default
                     const filePath = path.join(dir, fileName);
                     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-                    // Salva o arquivo
                     fs.writeFileSync(filePath, Buffer.from(media.data, 'base64'));
                     imagePaths.push(filePath);
                     //console.log(`[${chatId}] Comprovante (${media.mimetype}) recebido e salvo em: ${filePath}`);
                 } catch (saveError) {
                     console.error(`[${chatId}] Erro ao salvar comprovante recebido (${media.mimetype}):`, saveError);
-                    // Nao adiciona ao imagePaths se falhar
                 }
             }
         }

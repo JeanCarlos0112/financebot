@@ -57,7 +57,7 @@ async function proceedToNextStepOrRegister(chatId, currentState) {
 
         // 4. Categoria (Opcional, default 'Outros')
         if (!tempData.category) {
-            tempData.category = 'Outros'; // Define default se nao fornecido ainda
+            tempData.category = 'Outros';
         }
 
         // 5. Estabelecimento (Opcional)
@@ -67,7 +67,6 @@ async function proceedToNextStepOrRegister(chatId, currentState) {
             console.log(`[${chatId}] Próximo passo: Pedir 'establishment'`);
             return;
         }
-         // Garante 'N/A' se passou direto
          if (tempData.establishment === 'N/A' || tempData.establishment === 'n/a') {
              tempData.establishment = 'N/A';
          }
@@ -76,14 +75,14 @@ async function proceedToNextStepOrRegister(chatId, currentState) {
         // 6. Confirmacao de Notas (Ultima etapa antes de salvar)
         // Neste ponto, todos os campos obrigatorios e opcionais solicitados foram preenchidos.
         currentState.waitingFor = 'notes_confirmation';
-        let summary = `👍 Quase lá! Confira os dados:\n\n${utils.formatExpenseSummary(tempData, false)}`; // Mostra resumo sem notas ainda
+        let summary = `👍 Quase lá! Confira os dados:\n\n${utils.formatExpenseSummary(tempData, false)}`;
         currentState.nextResponseMessage = `${summary}\n\nQuer adicionar alguma *observação*? (Digite a nota ou responda "não")`;
         console.log(`[${chatId}] Próximo passo: Pedir 'notes_confirmation'`);
         return;
 
     } catch (error) {
         console.error(`Erro durante proceedToNextStepOrRegister para ${chatId}:`, error);
-        state.clearState(chatId); // Limpa estado em caso de erro
+        state.clearState(chatId);
         currentState.nextResponseMessage = "Ocorreu um erro processando sua solicitação. Vamos tentar de novo do início.";
         currentState.waitingFor = null;
     }
@@ -93,13 +92,13 @@ async function proceedToNextStepOrRegister(chatId, currentState) {
  * Finaliza o processo e registra a despesa no banco de dados.
  * @param {string} chatId
  * @param {object} expenseData - Os dados completos da despesa.
- * @param {array} imagePaths - Os caminhos das imagens associadas à despesa.
+ * @param {array} imagePaths - Os caminhos das imagens associadas a despesa.
  * @returns {Promise<void>}
- * @throws {Error} Se os dados finais forem inválidos.
+ * @throws {Error} Se os dados finais forem invalidos.
  */
 async function finalizeAndRegisterExpense(chatId, expenseData, imagePaths = []) {
     console.log(`[${chatId}] Finalizando e registrando despesa:`, expenseData);
-    // Validação final antes de inserir no DB
+    // Validacao final antes de inserir no DB
     if (typeof expenseData.value !== 'number' || isNaN(expenseData.value) || expenseData.value <= 0 ||
         !expenseData.category || !expenseData.paymentMethod || !expenseData.item) {
         console.error(`[${chatId}] Erro Crítico: Dados FINAIS inválidos ao tentar registrar:`, expenseData);
@@ -123,7 +122,7 @@ async function finalizeAndRegisterExpense(chatId, expenseData, imagePaths = []) 
 /**
  * Processa uma mensagem recebida do WhatsApp.
  * @param {object} message - O objeto da mensagem do whatsapp-web.js.
- * @param {array} imagePaths - Os caminhos das imagens associadas à despesa.
+ * @param {array} imagePaths - Os caminhos das imagens associadas a despesa.
  */
 async function handleIncomingMessage(message, imagePaths = []) {
     // Ignora mensagens de status, grupos, ou próprias mensagens do bot
@@ -148,7 +147,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
         state.clearState(chatId); // Limpa estado anterior se for nova conversa
     }
 
-    let responseMessage = "Desculpe, não consegui processar sua solicitação. 🤔"; // Mensagem padrão de erro
+    let responseMessage = "Desculpe, não consegui processar sua solicitação. 🤔"; // Mensagem padrao de erro
     let currentState = state.getState(chatId); // Pega o estado atual (pode ser undefined)
 
     try {
@@ -162,7 +161,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
 
             if (analysis.error) {
                  console.error(`[${chatId}] Erro na análise Gemini: ${analysis.error}. Raw: ${analysis.raw_response}`);
-                 // Tenta dar uma resposta genérica se a análise falhar
+                 // Tenta dar uma resposta generica se a analise falhar
                  responseMessage = await gemini.generateConversationalResponse(userMessage, 'unknown', isNewConversationFlow);
             } else {
 
@@ -201,12 +200,12 @@ async function handleIncomingMessage(message, imagePaths = []) {
                     // Depois: cancelamento global
                     else if (analysis.intent === 'cancel_action') {
                         responseMessage = await gemini.generateConversationalResponse(userMessage, 'cancel_action', false);
-                        state.clearState(chatId); // Limpa o estado ao cancelar
+                        state.clearState(chatId);
                     }
                     // Caso Especifico: Esperando a digitacao das notas
                     else if (fieldBeingWaitedFor === 'notes') {
                         // Interpreta QUALQUER coisa que nao seja cancelamento como a nota
-                        currentState.tempData.notes = userMessage; // Pega a mensagem INTEIRA como nota
+                        currentState.tempData.notes = userMessage;
                         console.log(`[${chatId}] Notas recebidas (mensagem inteira): "${userMessage}". Finalizando...`);
                         await finalizeAndRegisterExpense(chatId, currentState.tempData, currentState.tempData.imagePaths);
                         responseMessage = `✅ Despesa registrada com sucesso!\n\n${utils.formatExpenseSummary(currentState.tempData, true)}`;
@@ -222,7 +221,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
                              if (!spending?.length) spending = await db.getSpendingByCategory(chatId, 'all');
                              responseMessage = await gemini.generateSpendingAdvice(spending, userContext);
                              state.clearState(chatId);
-                        } else { // Assume cancelamento se nao for confirmacao explicita
+                        } else {
                              responseMessage = await gemini.generateConversationalResponse("Não, obrigado", 'cancel_action', false);
                              state.clearState(chatId);
                         }
@@ -246,24 +245,24 @@ async function handleIncomingMessage(message, imagePaths = []) {
                         }
                         // Validacao/Limpeza para 'establishment' (ex: remover aspas)
                          else if (fieldBeingWaitedFor === 'establishment') {
-                             processedValue = String(providedValue).replace(/["']/g, ''); // Remove aspas
-                             if (!processedValue) { // Nao pode ser vazio
+                             processedValue = String(providedValue).replace(/["']/g, '');
+                             if (!processedValue) {
                                  isValid = false;
                                  responseMessage = `Preciso que informe o nome do local ou digite 'N/A' se não aplicável.`;
                              }
                          }
                           // Validacao/Limpeza para 'item'
                          else if (fieldBeingWaitedFor === 'item') {
-                             processedValue = String(providedValue).replace(/["']/g, ''); // Remove aspas
-                              if (!processedValue) { // Nao pode ser vazio
+                             processedValue = String(providedValue).replace(/["']/g, '');
+                              if (!processedValue) {
                                  isValid = false;
                                  responseMessage = `Por favor, informe o item ou serviço principal.`;
                              }
                          }
                          // Validacao/Limpeza para 'payment_method'
                           else if (fieldBeingWaitedFor === 'payment_method') {
-                             processedValue = String(providedValue).replace(/["']/g, ''); // Remove aspas
-                               if (!processedValue) { // Nao pode ser vazio
+                             processedValue = String(providedValue).replace(/["']/g, '');
+                               if (!processedValue) {
                                  isValid = false;
                                  responseMessage = `Como você pagou? (Pix, Débito, Crédito, etc.)`;
                              }
@@ -272,26 +271,24 @@ async function handleIncomingMessage(message, imagePaths = []) {
 
                         if (isValid) {
                             console.log(`[${chatId}] Campo '${fieldBeingWaitedFor}' recebido: "${processedValue}". Avançando...`);
-                            // Converte nome do campo para camelCase se necessario (ex: payment_method -> paymentMethod)
                             const internalFieldName = fieldBeingWaitedFor === 'payment_method' ? 'paymentMethod' : fieldBeingWaitedFor;
                             currentState.tempData[internalFieldName] = processedValue;
 
                             // Cria um novo objeto de estado para passar para a proxima funcao
                             let nextState = { ...currentState };
-                            await proceedToNextStepOrRegister(chatId, nextState); // Passa a copia
+                            await proceedToNextStepOrRegister(chatId, nextState);
 
                             // Atualiza o estado principal com o resultado de proceedToNextStepOrRegister
                             state.setState(chatId, nextState.waitingFor ? nextState : null);
                             responseMessage = nextState.nextResponseMessage;
                         }
-                        // Se nao for valido, a responseMessage ja foi definida na validacao
 
                     } else {
                         // Tratamento da escolha na desambiguacao
                         if (fieldBeingWaitedFor === 'receipt_disambiguation') {
                             console.log(`[${chatId}] Processando resposta para 'receipt_disambiguation'. Mensagem: \"${userMessage}\"`);
                             const userChoice = userMessage.toLowerCase().trim();
-                            const candidates = currentState.tempData.foundExpenses; // Pega do estado
+                            const candidates = currentState.tempData.foundExpenses;
                             let selectedId = null;
                             let errorMsg = null;
 
@@ -353,10 +350,10 @@ async function handleIncomingMessage(message, imagePaths = []) {
                     }
                 }
 
-                // --- Cenário B: Nova Intenção do Usuário (sem estado pendente) ---
+                // --- Cenário B: Nova Intencao do Usuário (sem estado pendente) ---
                 else {
                     console.log(`[${chatId}] Processando nova intenção: '${analysis.intent}'`);
-                    // Limpa qualquer resquício de estado anterior (exceto lastResearchTopic)
+                    // Limpa qualquer resquicio de estado anterior (exceto lastResearchTopic)
                     state.clearWaitingFor(chatId);
                     state.clearTempData(chatId);
 
@@ -371,9 +368,9 @@ async function handleIncomingMessage(message, imagePaths = []) {
                             let numericValue = null;
                             if (vR != null && vR !== undefined) {
                                 numericValue = parseFloat(String(vR).replace(/\s/g, '').replace(',', '.'));
-                                if (isNaN(numericValue) || numericValue <= 0) numericValue = null; // Invalida se não for número positivo
+                                if (isNaN(numericValue) || numericValue <= 0) numericValue = null;
                             }
-                             // Cria o objeto inicial com os dados extraídos (podem ser null)
+                             // Cria o objeto inicial com os dados extraidos (podem ser null)
                             const initialExpenseData = {
                                 value: numericValue,
                                 category: c || null,
@@ -392,16 +389,16 @@ async function handleIncomingMessage(message, imagePaths = []) {
 
                             // Atualiza o estado global com base no resultado
                             state.setState(chatId, registrationState.waitingFor ? registrationState : null);
-                            responseMessage = registrationState.nextResponseMessage; // Pega a mensagem de resposta (pedindo o próximo campo ou confirmação)
-                            state.clearLastResearchTopic(chatId); // Registro de despesa limpa contexto de pesquisa
+                            responseMessage = registrationState.nextResponseMessage;
+                            state.clearLastResearchTopic(chatId);
                             break;
 
                         case 'request_report':
-                            const reportPeriod = analysis.report_period || 'month'; // Default para 'month'
+                            const reportPeriod = analysis.report_period || 'month';
                             console.log(`[${chatId}] Gerando relatório para período: ${reportPeriod}`);
                             const expenses = await db.getExpenses(chatId, reportPeriod);
                             responseMessage = utils.formatReport(expenses, reportPeriod);
-                            state.clearLastResearchTopic(chatId); // Ver relatório limpa contexto de pesquisa
+                            state.clearLastResearchTopic(chatId);
                             break;
 
                         case 'request_advice':
@@ -410,37 +407,37 @@ async function handleIncomingMessage(message, imagePaths = []) {
                             let spendingData = await db.getSpendingByCategory(chatId, 'last_month');
                             if (!spendingData?.length) spendingData = await db.getSpendingByCategory(chatId, 'all');
                             responseMessage = await gemini.generateSpendingAdvice(spendingData, userMessage); // Passa a mensagem original como contexto
-                            state.clearLastResearchTopic(chatId); // Pedir conselho limpa contexto de pesquisa anterior
+                            state.clearLastResearchTopic(chatId);
                             break;
 
                         case 'request_research':
                             const researchQuery = analysis.research_query;
                             const lastTopic = state.getState(chatId)?.lastResearchTopic;
 
-                            if (researchQuery) { // Nova pesquisa explícita
+                            if (researchQuery) {
                                 console.log(`[${chatId}] Nova pesquisa solicitada: "${researchQuery}"`);
                                 responseMessage = await gemini.generateResearchResponse(researchQuery, null);
-                                state.updateState(chatId,{ lastResearchTopic: researchQuery }); // Armazena novo tópico
+                                state.updateState(chatId,{ lastResearchTopic: researchQuery });
                             } else if (lastTopic) { // Follow-up de pesquisa anterior (sem query nova extraída)
                                 console.log(`[${chatId}] Follow-up de pesquisa detectado sobre: "${lastTopic}". Pedido: "${userMessage}"`);
                                 responseMessage = await gemini.generateResearchResponse(lastTopic, userMessage);
-                                // Mantém o lastResearchTopic existente
-                            } else { // Pedido de pesquisa genérico sem tópico claro ou anterior
+                                // Mantem o lastResearchTopic existente
+                            } else { // Pedido de pesquisa generico sem topico claro ou anterior
                                 console.log(`[${chatId}] Pedido de pesquisa genérico detectado.`);
                                 responseMessage = "Claro! Sobre qual tópico financeiro você gostaria de saber mais?";
-                                // Não define lastResearchTopic ainda
+                                // Nao define lastResearchTopic ainda
                             }
                             break;
 
                         case 'greeting':
                             console.log(`[${chatId}] Gerando saudação (nova conversa: ${isNewConversationFlow}).`);
                             responseMessage = await gemini.generateConversationalResponse(userMessage, 'greeting', isNewConversationFlow);
-                            state.clearLastResearchTopic(chatId); // Saudação limpa contexto de pesquisa
+                            state.clearLastResearchTopic(chatId);
                             break;
 
                         case 'chit_chat':
                             const currentLastTopic = state.getState(chatId)?.lastResearchTopic;
-                             // Lógica Aprimorada: Verifica se PODE ser um follow-up de pesquisa, mesmo que classificado como chit_chat
+                             // Logica Aprimorada: Verifica se PODE ser um follow-up de pesquisa, mesmo que classificado como chit_chat
                             const isPotentialFollowUp = currentLastTopic && (
                                 userMessage.toLowerCase().includes("explique") ||
                                 userMessage.toLowerCase().includes("mais") ||
@@ -455,7 +452,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
                             if (isPotentialFollowUp) {
                                 console.log(`[${chatId}] 'chit_chat' interpretado como follow-up de pesquisa para: "${currentLastTopic}"`);
                                 responseMessage = await gemini.generateResearchResponse(currentLastTopic, userMessage);
-                                // Mantém o lastResearchTopic
+                                // Mantem o lastResearchTopic
                             } else { // Trata como chit_chat normal
                                 console.log(`[${chatId}] Gerando resposta para 'chit_chat'.`);
                                 responseMessage = await gemini.generateConversationalResponse(userMessage, 'chit_chat', false);
@@ -466,10 +463,9 @@ async function handleIncomingMessage(message, imagePaths = []) {
                                     console.log(`[${chatId}] Bot ofereceu ajuda/dicas. -> Entrando no estado 'advice_confirmation'`);
                                     state.updateState(chatId,{
                                          waitingFor: 'advice_confirmation',
-                                         tempData: { userContext: userMessage } // Guarda a mensagem original que levou à oferta
+                                         tempData: { userContext: userMessage }
                                      });
                                 } else {
-                                     // Se não ofereceu ajuda, limpa contexto de pesquisa para evitar follow-ups incorretos
                                      state.clearLastResearchTopic(chatId);
                                 }
                             }
@@ -484,7 +480,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
                                 if (!foundExpenses || foundExpenses.length === 0) {
                                     responseMessage = "🙁 Não encontrei nenhuma despesa com esses detalhes para buscar o comprovante.";
                                 } else if (foundExpenses.length > 1) {
-                                    // --- Lógica para Ambiguidade ---
+                                    // --- Logica para Ambiguidade ---
                                     console.log(`[${chatId}] Múltiplas despesas encontradas. Solicitando desambiguação.`);
                                     let msg = "Encontrei estas despesas. Qual comprovante você deseja?\n_(Responda com o ID, 'o mais antigo' ou 'o mais recente')_\n";
                                     foundExpenses.forEach(exp => {
@@ -520,20 +516,19 @@ async function handleIncomingMessage(message, imagePaths = []) {
                             }
                             break;
 
-                        case 'confirm_action': // Confirmação genérica fora de um fluxo esperado
-                        case 'provide_info':   // Informação genérica fora de um fluxo esperado
-                        case 'cancel_action': // Cancelamento genérico fora de um fluxo esperado
+                        case 'confirm_action': // Confirmacao generica fora de um fluxo esperado
+                        case 'provide_info':   // Informacao generica fora de um fluxo esperado
+                        case 'cancel_action': // Cancelamento generico fora de um fluxo esperado
                              console.log(`[${chatId}] Intenção '${analysis.intent}' recebida fora de contexto. Tratando como 'unknown'.`);
-                             // Tenta gerar uma resposta conversacional genérica
                              responseMessage = await gemini.generateConversationalResponse(userMessage, 'unknown', isNewConversationFlow);
-                             state.clearLastResearchTopic(chatId); // Limpa contexto pesquisa
+                             state.clearLastResearchTopic(chatId);
                              break;
 
 
-                        default: // unknown ou erro não capturado na análise
+                        default:
                             console.warn(`[${chatId}] Intenção não reconhecida ou erro LLM não tratado:`, analysis);
                             const lastTopicUnknown = state.getState(chatId)?.lastResearchTopic;
-                            // Última tentativa: tratar como follow-up de pesquisa se houver tópico anterior
+                            // Última tentativa: tratar como follow-up de pesquisa se houver topico anterior
                             if (lastTopicUnknown) {
                                 console.log(`[${chatId}] Intenção 'unknown' interpretada como follow-up de pesquisa para: "${lastTopicUnknown}"`);
                                 responseMessage = await gemini.generateResearchResponse(lastTopicUnknown, userMessage);
@@ -558,7 +553,7 @@ async function handleIncomingMessage(message, imagePaths = []) {
     if (responseMessage) {
         // Log da resposta antes de enviar
         if (Array.isArray(responseMessage)) {
-            // Se for um array (provavelmente com imagem), loga apenas a parte de texto ou uma msg genérica
+            // Se for um array (provavelmente com imagem), loga apenas a parte de texto ou uma msg generica
             const textPart = responseMessage.find(item => typeof item === 'string');
             console.log(`[${chatId}] Enviando resposta com comprovante: "${textPart || 'Comprovante encontrado...'}"`);
         } else if (typeof responseMessage === 'string'){
@@ -570,13 +565,12 @@ async function handleIncomingMessage(message, imagePaths = []) {
              console.log(`[${chatId}] Enviando resposta de tipo inesperado:`, responseMessage);
         }
 
-        // Lógica de envio (agora dentro do if principal)
+        // Logica de envio (agora dentro do if principal)
         try {
-           // ... (código de retorno ou preparação para envio)
-           return responseMessage; // Retorna a string ou o array
+           return responseMessage; 
         } catch (sendError) {
              console.error(`[${chatId}] Erro CRÍTICO ao preparar mensagem para envio:`, sendError);
-             return null; // Indica que não houve envio
+             return null;
         }
     }
 }

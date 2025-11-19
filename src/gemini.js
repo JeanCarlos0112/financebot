@@ -4,8 +4,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GOOGLE_AI_API_KEY, SAFETY_SETTINGS } = require('../config');
 
-let genAI; // Cliente Google AI
-let model; // Modelo Gemini
+let genAI;
+let model;
 let isGoogleAiAvailable = false;
 
 // --- Interacao com Google AI (Gemini) ---
@@ -173,12 +173,12 @@ Responda de forma Curta e Natural (use formatação WhatsApp como *negrito* ou _
         const response = result.response;
         if (response.promptFeedback?.blockReason) {
             console.warn(`Resposta conversacional bloqueada: ${response.promptFeedback.blockReason}`);
-            return "Hmm, sobre isso prefiro não comentar. Mas posso ajudar com suas finanças!"; // Resposta segura
+            return "Hmm, sobre isso prefiro não comentar. Mas posso ajudar com suas finanças!";
         }
-        return response.text() || "Legal! 😊 Em que mais posso te ajudar com suas finanças?"; // Fallback
+        return response.text() || "Legal! 😊 Em que mais posso te ajudar com suas finanças?";
     } catch (error) {
         console.error("Erro ao gerar resposta conversacional:", error);
-        return "Opa! Algo deu errado aqui. 😅 Tente novamente em um instante."; // Mensagem de erro generica
+        return "Opa! Algo deu errado aqui. 😅 Tente novamente em um instante.";
     }
 }
 
@@ -214,7 +214,7 @@ Resposta (use formatação WhatsApp):`;
     // Cenario 2: Com dados de gastos
     let dataString = "Gastos recentes por categoria (valores agregados):\n";
     spendingData.forEach(item => {
-        dataString += `- ${item.category}: R$ ${item.total.toFixed(2).replace('.', ',')}\n`; // Formata para Real
+        dataString += `- ${item.category}: R$ ${item.total.toFixed(2).replace('.', ',')}\n`;
     });
 
     console.log("Gerando conselho financeiro com dados. Contexto:", userContextMessage);

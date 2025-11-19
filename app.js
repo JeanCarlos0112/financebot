@@ -1,5 +1,5 @@
 // --- app.js ---
-// Ponto de entrada principal da aplicação. Inicializa módulos e gerencia o ciclo de vida.
+// Ponto de entrada principal da aplicacao. Inicializa modulos e gerencia o ciclo de vida.
 
 const db = require('./src/db');
 const gemini = require('./src/gemini');
@@ -7,7 +7,7 @@ const whatsapp = require('./src/whatsappClient');
 
 let isShuttingDown = false; // Flag para evitar chamadas múltiplas de shutdown
 
-// --- Função de Encerramento Controlado ---
+// --- Funcao de Encerramento Controlado ---
 async function gracefulShutdown() {
     if (isShuttingDown) {
         console.log("Desligamento já em progresso...");
@@ -24,35 +24,34 @@ async function gracefulShutdown() {
             // Adiciona um timeout para o destroy, caso ele trave
             await Promise.race([
                 waClient.destroy(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout ao desconectar WhatsApp')), 8000)) // Timeout de 8s
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout ao desconectar WhatsApp')), 8000))
             ]);
             console.log('Cliente WhatsApp desconectado com sucesso.');
         } catch (e) {
             console.error("Erro (ou timeout) ao desconectar o cliente WhatsApp:", e.message);
-            // Continua o desligamento mesmo assim
         }
     } else {
         console.log("Cliente WhatsApp não estava inicializado.");
     }
 
-    // 2. Fechar a conexão com o banco de dados
+    // 2. Fechar a conexao com o banco de dados
     console.log("Fechando conexão com o banco de dados...");
-    db.closeDbConnection(); // A função já loga o resultado
+    db.closeDbConnection();
 
     // 3. Encerrar o processo
     console.log("Aguardando últimos logs...");
-    // Dá um pequeno tempo para logs pendentes serem escritos
+    // Da um pequeno tempo para logs pendentes serem escritos
     setTimeout(() => {
         console.log("Processo encerrado.");
-        process.exit(0); // Encerra o processo Node.js
-    }, 1500); // Espera 1.5 segundos
+        process.exit(0);
+    }, 1500);
 }
 
-// --- Inicialização da Aplicação ---
+// --- Inicializacao da Aplicacao ---
 async function startApp() {
     console.log("--- Iniciando FinanceBot ---");
 
-    // 1. Configurar Google AI (necessário antes de inicializar o WA)
+    // 1. Configurar Google AI (necessario antes de inicializar o WA)
     const isAiReady = gemini.setupGoogleAI();
     if (!isAiReady) {
         console.warn("Aplicação continuará sem funcionalidades de IA.");
@@ -66,29 +65,29 @@ async function startApp() {
         console.log("Banco de dados inicializado com sucesso.");
     } catch (dbError) {
         console.error("!!! FALHA CRÍTICA AO INICIALIZAR O BANCO DE DADOS !!!", dbError);
-        process.exit(1); // Encerra se o DB falhar
+        process.exit(1);
     }
 
-    // 3. Inicializar Cliente WhatsApp (só depois do DB estar pronto)
-    // O initWhatsApp agora gerencia seus próprios erros críticos e logs de inicialização
+    // 3. Inicializar Cliente WhatsApp (so depois do DB estar pronto)
+    // O initWhatsApp agora gerencia seus proprios erros criticos e logs de inicializacao
     whatsapp.initWhatsApp(() => {
          console.log("Callback de WhatsApp Pronto chamado.");
-         // Pode adicionar ações aqui que só devem ocorrer quando o WA estiver 100% pronto
+         // Pode adicionar acoes aqui que so devem ocorrer quando o WA estiver 100% pronto
      });
 
     console.log("--- Aplicação FinanceBot iniciada e aguardando conexões/mensagens ---");
 
     // --- Listeners para Encerramento Controlado ---
-    process.on('SIGINT', gracefulShutdown);  // Captura Ctrl+C
-    process.on('SIGTERM', gracefulShutdown); // Captura sinais de término (ex: systemctl stop)
+    process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown); // Captura sinais de termino (ex: systemctl stop)
     process.on('uncaughtException', (error, origin) => {
         console.error(`\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         console.error('!!! ERRO NÃO TRATADO (Uncaught Exception) !!!');
         console.error('Origem:', origin);
         console.error('Erro:', error);
         console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
-        // Tenta um desligamento controlado, mas pode não funcionar dependendo do erro
-        gracefulShutdown().catch(() => process.exit(1)); // Força saída se shutdown falhar
+        // Tenta um desligamento controlado, mas pode nao funcionar dependendo do erro
+        gracefulShutdown().catch(() => process.exit(1));
     });
      process.on('unhandledRejection', (reason, promise) => {
         console.error(`\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
@@ -97,11 +96,10 @@ async function startApp() {
         console.error('Razão:', reason);
         console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n`);
          // Tenta um desligamento controlado
-        gracefulShutdown().catch(() => process.exit(1)); // Força saída se shutdown falhar
+        gracefulShutdown().catch(() => process.exit(1));
     });
 
 
 }
 
-// --- Iniciar a aplicação ---
 startApp();

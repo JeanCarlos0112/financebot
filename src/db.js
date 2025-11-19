@@ -1,11 +1,11 @@
 // --- db.js ---
-// Gerencia a conexão e operações com o banco de dados SQLite
+// Gerencia a conexao e operacoes com o banco de dados SQLite
 
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
-const { DB_FILE } = require('../config'); // Importa o nome do arquivo do config
+const { DB_FILE } = require('../config');
 
-let db; // Variável para a conexão com o DB
+let db;
 
 // --- Inicialização do Banco de Dados ---
 function initDb() {
@@ -68,7 +68,7 @@ function addExpense(chatId, expenseData) {
         // Validação e formatação da data
         let expenseDate = expenseData.date;
         if (!expenseDate || expenseDate === 'today' || expenseDate === null) {
-            expenseDate = new Date().toISOString().split('T')[0]; // Hoje
+            expenseDate = new Date().toISOString().split('T')[0];
         } else {
             try {
                 const d = new Date(expenseDate);
@@ -80,11 +80,11 @@ function addExpense(chatId, expenseData) {
             }
         }
 
-        const establishment = expenseData.establishment || 'N/E'; // Não especificado
+        const establishment = expenseData.establishment || 'N/E';
         const category = expenseData.category || 'Outros';
-        const item = expenseData.item; // Obrigatório pela validação inicial
+        const item = expenseData.item; // Obrigatório pela validacao inicial
         const notes = expenseData.notes || null;
-        const paymentMethod = expenseData.paymentMethod; // Obrigatório
+        const paymentMethod = expenseData.paymentMethod; // Obrigatorio
 
         db.run(sql, [chatId, expenseDate, category, expenseData.value, establishment, paymentMethod, item, notes], function (err) {
             if (err) {
@@ -105,13 +105,13 @@ function getExpenses(chatId, period = 'month') {
         let sql = `SELECT id, expense_date, category, value, establishment, item, notes, payment_method FROM expenses WHERE chat_id = ?`;
         const params = [chatId];
         const now = new Date();
-        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Data sem hora
+        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         let startDate, endDate;
-        let periodDescription = period; // Para logs
+        let periodDescription = period;
 
         if (period === 'month') {
             startDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1).toISOString().split('T')[0];
-            endDate = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 1).toISOString().split('T')[0]; // Próximo mês, dia 1 (exclusivo)
+            endDate = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 1).toISOString().split('T')[0];
             sql += ` AND date(expense_date) >= date(?) AND date(expense_date) < date(?)`;
             params.push(startDate, endDate);
         } else if (period === 'today') {
@@ -125,7 +125,7 @@ function getExpenses(chatId, period = 'month') {
             sql += ` AND date(expense_date) = date(?)`;
             params.push(startDate);
         } else if (period === 'all') {
-            // Sem filtro de data adicional
+    
         } else {
              console.warn(`Período de relatório não reconhecido: '${period}'. Usando 'month' como padrão.`);
              periodDescription = 'month (default)';
@@ -168,8 +168,8 @@ function getSpendingByCategory(chatId, period = 'month') {
             sqlPeriod = ` AND date(expense_date) >= date(?) AND date(expense_date) < date(?)`;
             params.push(startDate, endDate);
         } else if (period === 'last_month') {
-            startDate = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1).toISOString().split('T')[0]; // Mês anterior, dia 1
-            endDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1).toISOString().split('T')[0]; // Mês atual, dia 1 (exclusivo)
+            startDate = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1).toISOString().split('T')[0];
+            endDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1).toISOString().split('T')[0];
             sqlPeriod = ` AND date(expense_date) >= date(?) AND date(expense_date) < date(?)`;
             params.push(startDate, endDate);
         } else if (period !== 'all') {
@@ -186,21 +186,20 @@ function getSpendingByCategory(chatId, period = 'month') {
                 console.error(`Erro ao buscar gastos/categoria (${periodDescription}):`, err.message);
                 return reject(err);
             }
-            // Se não encontrou nada no período específico (e não era 'all' originalmente), tenta buscar 'all' para dar conselhos
+            // Se nao encontrou nada no periodo especifico (e nao era 'all' originalmente), tenta buscar 'all' para dar conselhos
             if ((!rows || rows.length === 0) && period !== 'all') {
                 console.log(`Sem dados de gastos/categoria para '${periodDescription}'. Tentando buscar 'all' para análise de conselhos.`);
-                sql = sqlBase + ` GROUP BY category ORDER BY total DESC`; // Remove filtro de período
-                db.all(sql, [chatId], (errAll, rowsAll) => { // Usa apenas [chatId] como param
+                sql = sqlBase + ` GROUP BY category ORDER BY total DESC`;
+                db.all(sql, [chatId], (errAll, rowsAll) => {
                     if (errAll) {
                         console.error("Erro ao buscar gastos/categoria ('all' fallback):", errAll.message);
-                        reject(errAll); // Rejeita com o erro da segunda tentativa
+                        reject(errAll);
                     } else {
                         console.log(`Encontradas ${rowsAll?.length || 0} categorias ('all' fallback) para ${chatId}.`);
                         resolve(rowsAll || []);
                     }
                 });
             } else {
-                // Se encontrou dados no período original ou se a busca inicial já era 'all'
                 console.log(`Encontradas ${rows?.length || 0} categorias (${periodDescription}) para ${chatId}.`);
                 resolve(rows || []);
             }
@@ -217,18 +216,18 @@ function closeDbConnection() {
             } else {
                 console.log("Conexão com DB fechada com sucesso.");
             }
-            db = null; // Garante que a variável seja limpa
+            db = null;
         });
     } else {
         console.log("Conexão com DB já estava fechada ou não foi inicializada.");
     }
 }
 
-// Adiciona imagens vinculadas à despesa
+// Adiciona imagens vinculadas a despesa
 function addExpenseImages(expenseId, imagePaths) {
     return new Promise((resolve, reject) => {
         if (!db) return reject(new Error("Conexão com DB não inicializada."));
-        if (!expenseId || !Array.isArray(imagePaths) || imagePaths.length === 0) return resolve(); // Nada a fazer
+        if (!expenseId || !Array.isArray(imagePaths) || imagePaths.length === 0) return resolve();
         const stmt = db.prepare(`INSERT INTO expense_images (expense_id, image_path) VALUES (?, ?)`);
         for (const path of imagePaths) {
             stmt.run(expenseId, path);
@@ -267,23 +266,22 @@ async function addExpenseWithImages(chatId, expenseData, imagePaths) {
     return expenseId;
 }
 
-// Procura por despesas com base em critérios (para encontrar comprovantes)
+// Procura por despesas com base em criterios (para encontrar comprovantes)
 function findExpense(chatId, criteria) {
     return new Promise((resolve, reject) => {
         if (!db) return reject(new Error("Conexão com DB não inicializada."));
 
-        // Seleciona também o timestamp formatado como ISO 8601 UTC
         let sql = `SELECT id, expense_date, item, value, category, establishment, strftime('%Y-%m-%dT%H:%M:%SZ', timestamp) as timestamp_utc FROM expenses WHERE chat_id = ?`;
         const params = [chatId];
         const conditions = [];
 
-        // Critérios de busca (adicionar mais conforme necessário)
+        // Criterios de busca (adicionar mais conforme necessario)
         if (criteria.item) {
             conditions.push(`item LIKE ?`);
             params.push(`%${criteria.item}%`); // Busca parcial
         }
         if (criteria.value) {
-            // Busca por valor aproximado (ex: +/- 10%)
+            // Busca por valor aproximado
             const tolerance = 0.10;
             conditions.push(`value BETWEEN ? AND ?`);
             params.push(criteria.value * (1 - tolerance), criteria.value * (1 + tolerance));
@@ -301,7 +299,7 @@ function findExpense(chatId, criteria) {
                     conditions.push(`date(expense_date) = date(?)`);
                     params.push(dateStr);
                 }
-            } catch (e) { /* Ignora data inválida */ }
+            } catch (e) { }
         }
         if (criteria.category) {
             conditions.push(`category = ?`);
@@ -311,7 +309,7 @@ function findExpense(chatId, criteria) {
         if (conditions.length > 0) {
             sql += ` AND ` + conditions.join(' AND ');
         } else {
-            // Se nenhum critério útil for fornecido, retorna vazio para evitar buscar tudo
+            
             console.log(`[${chatId}] Nenhum critério válido fornecido para findExpense.`);
             return resolve([]);
         }
@@ -326,7 +324,7 @@ function findExpense(chatId, criteria) {
                 reject(err);
             } else {
                 console.log(`[${chatId}] Encontradas ${rows?.length || 0} despesas candidatas.`);
-                resolve(rows || []); // Retorna as despesas encontradas
+                resolve(rows || []);
             }
         });
     });
